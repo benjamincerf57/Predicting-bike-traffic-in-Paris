@@ -9,13 +9,9 @@ from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import FunctionTransformer
 from sklearn.preprocessing import OneHotEncoder
 
-# Construction du chemin complet pour les fichiers train.parquet et test.parquet
-train_path = os.path.join("data", "train.parquet")
-test_path = os.path.join("data", "test.parquet")
-
 # Lecture des fichiers
-df_train = pd.read_parquet(train_path)
-df_test = pd.read_parquet(test_path)
+df_train = pd.read_parquet("../input/mdsb-2023/train.parquet")
+df_test = pd.read_parquet("../input/mdsb-2023/final_test.parquet")
 
 _target_column_name = "log_bike_count"
 
