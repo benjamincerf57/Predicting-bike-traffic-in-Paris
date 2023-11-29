@@ -9,8 +9,8 @@ from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import FunctionTransformer
 from sklearn.preprocessing import OneHotEncoder
 
-df_train = pd.read_parquet("../input/mdsb-2023/train.parquet")
-df_test = pd.read_parquet("../input/mdsb-2023/test.parquet")
+df_train = pd.read_parquet("../data/train.parquet")
+df_test = pd.read_parquet("../data/test.parquet")
 _target_column_name = "log_bike_count"
 
 
