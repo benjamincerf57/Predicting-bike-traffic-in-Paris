@@ -9,14 +9,20 @@ from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import FunctionTransformer
 from sklearn.preprocessing import OneHotEncoder
 
-df_train = pd.read_parquet("../data/train.parquet")
-df_test = pd.read_parquet("../data/test.parquet")
+# Construction du chemin complet pour les fichiers train.parquet et test.parquet
+train_path = os.path.join("data", "train.parquet")
+test_path = os.path.join("data", "test.parquet")
+
+# Lecture des fichiers
+df_train = pd.read_parquet(train_path)
+df_test = pd.read_parquet(test_path)
+
 _target_column_name = "log_bike_count"
 
 
 y_train = df_train[_target_column_name]
-X_train = df_train.drop(_target_column_name)
-X_test = df_test.drop(_target_column_name)
+X_train = df_train.drop(columns=[_target_column_name])
+X_test = df_test.drop(columns=[_target_column_name])
 
 
 def _encode_dates(X):
