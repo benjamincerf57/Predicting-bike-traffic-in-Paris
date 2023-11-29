@@ -8,6 +8,7 @@ from sklearn.linear_model import Ridge
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import FunctionTransformer
 from sklearn.preprocessing import OneHotEncoder
+from catboost import CatBoostRegressor
 
 # Lecture des fichiers
 df_train = pd.read_parquet("../input/mdsb-2023/train.parquet")
@@ -48,7 +49,7 @@ preprocessor = ColumnTransformer(
     ]
 )
 
-regressor = Ridge()
+regressor = CatBoostRegressor(iterations= 1000, learning_rate = 0.2)
 
 pipeline = make_pipeline(date_encoder, preprocessor, regressor)
 pipeline.fit(X_train, y_train)
