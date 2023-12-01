@@ -8,16 +8,21 @@ from sklearn.linear_model import Ridge
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import FunctionTransformer
 from sklearn.preprocessing import OneHotEncoder
+from sklearn.metrics import mean_squared_error
 from catboost import CatBoostRegressor
 
 # Lecture des fichiers
-df_train = pd.read_parquet("../input/mdsb-2023/train.parquet")
-df_test = pd.read_parquet("../input/mdsb-2023/final_test.parquet")
+train_path = os.path.join("data", "train.parquet")
+test_path = os.path.join("data", "test.parquet")
+
+df_train = pd.read_parquet(train_path)
+df_test = pd.read_parquet(test_path)
 
 _target_column_name = "log_bike_count"
 
 
 y_train = df_train[_target_column_name]
+y_test = df_test[_target_column_name]
 X_train = df_train.drop(columns=[_target_column_name])
 X_test = df_test.drop(columns=[_target_column_name])
 
@@ -36,26 +41,22 @@ def _encode_dates(X):
 
 
 
-
-<<<<<<< HEAD
-X_train = X_train.drop(columns=["counter_name", "site_name", "counter_technical_id"])
-X_test = X_test.drop(columns=["counter_name", "site_name", "counter_technical_id"])
-=======
-X_train = X_train.drop(columns=["counter_name", "site_name", "counter_technical_id", "coordinates"])
-X_test = X_test.drop(columns=["counter_name", "site_name", "counter_technical_id", "bike_count", "coordinates"])
->>>>>>> my_work
-
-# Define the encoders we want to use
 date_encoder = FunctionTransformer(_encode_dates)
 date_cols = _encode_dates(X_train[["date"]]).columns.tolist()
 
-#Define the categorical columns we want CatBoost to take into account
-categorical_cols = ["counter_id", "site_id"]
+categorical_encoder = OneHotEncoder(handle_unknown="ignore")
+categorical_cols = ["counter_name", "site_name"]
 
-#Create our Pipeline
-regressor = CatBoostRegressor(iterations= 1000, learning_rate = 0.2, cat_features=categorical_cols)
+preprocessor = ColumnTransformer(
+    [
+        ("date", OneHotEncoder(handle_unknown="ignore"), date_cols),
+        ("cat", categorical_encoder, categorical_cols),
+    ]
+)
 
-pipeline = make_pipeline(date_encoder, regressor)
+regressor = CatBoostRegressor(iterations= 1000, learning_rate = 0.2)
+
+pipeline = make_pipeline(date_encoder, preprocessor, regressor)
 pipeline.fit(X_train, y_train)
 
 y_pred = pipeline.predict(X_test)
@@ -65,5 +66,11 @@ results = pd.DataFrame(
         log_bike_count=y_pred,
     )
 )
-results.to_csv("submission.csv", index=False)
+
+print(
+    f"Train set, RMSE={mean_squared_error(y_train, pipeline.predict(X_train), squared=False):.2f}"
+)
+print(
+    f"Test set, RMSE={mean_squared_error(y_test, pipeline.predict(X_test), squared=False):.2f}"
+)
 
