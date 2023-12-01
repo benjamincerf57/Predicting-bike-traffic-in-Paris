@@ -37,8 +37,8 @@ def _encode_dates(X):
 
 
 
-X_train = X_train.drop(columns=["counter_name", "site_name", "counter_technical_id"])
-X_test = X_test.drop(columns=["counter_name", "site_name", "counter_technical_id"])
+X_train = X_train.drop(columns=["counter_name", "site_name", "counter_technical_id", "coordinates"])
+X_test = X_test.drop(columns=["counter_name", "site_name", "counter_technical_id", "bike_count", "coordinates"])
 
 # Define the encoders we want to use
 date_encoder = FunctionTransformer(_encode_dates)
