@@ -19,7 +19,7 @@ _target_column_name = "log_bike_count"
 
 y_train = df_train[_target_column_name]
 X_train = df_train.drop(columns=[_target_column_name])
-X_test = df_test.drop(columns=[_target_column_name])
+X_test = df_test
 
 
 def _encode_dates(X):
