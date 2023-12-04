@@ -16,8 +16,6 @@ df_test = pd.read_parquet("../input/mdsb-2023/final_test.parquet")
 
 _target_column_name = "log_bike_count"
 
-
-y_train = df_train[_target_column_name]
 X_train = df_train.drop(columns=[_target_column_name])
 X_test = df_test
 
@@ -48,13 +46,32 @@ date_cols = _encode_dates(X_train[["date"]]).columns.tolist()
 #Define the categorical columns we want CatBoost to take into account
 categorical_cols = ["counter_id", "site_id"]
 
-# Try to erase the null values 
+X_train = X_train[X_train['log_bike_count'] != 0]
+y_train = df_train[_target_column_name]
 
-X_train['global_mean'] = X_train.groupby('counter_id')['log_bike_count'].transform(lambda x: x.replace(0, x[x != 0].mean()))
-X_train['log_bike_count'] = X_train['log_bike_count'].where(X_train['log_bike_count'] != 0, X_train['global_mean'])
-X_train = X_train.drop('global_mean', axis=1)
+# Create a column for holidays 
 
+vacances_scolaires = [
+    ('2020-10-17', '2020-11-02'),  
+    ('2020-12-19', '2021-01-04'),  
+    ('2021-02-20', '2021-03-08'),  
+    ('2021-04-10', '2021-04-26'), 
+    ('2021-07-10', '2021-09-01'),  
+    ('2021-10-23', '2021-11-08'),  
+    ('2021-12-18', '2022-01-03'),  
+]
 
+for i, (debut, fin) in enumerate(vacances_scolaires):
+    vacances_scolaires[i] = (pd.to_datetime(debut), pd.to_datetime(fin))
+
+# Créez une nouvelle colonne 'vacances' avec des valeurs par défaut à 0
+X_train['vacances'] = 0
+
+# Marquez les jours correspondant aux vacances scolaires avec 1
+for debut, fin in vacances_scolaires:
+    X_train.loc[(X_train['date'] >= debut) & (X_train['date'] <= fin), 'vacances'] = 1
+    
+    
 #Create our Pipeline
 regressor = CatBoostRegressor(iterations= 1000, learning_rate = 0.2, cat_features=categorical_cols)
 
