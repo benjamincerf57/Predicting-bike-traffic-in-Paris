@@ -55,7 +55,7 @@ columns_to_interpolate = ['t']
 weather_data[columns_to_interpolate] = weather_data[columns_to_interpolate].interpolate(method='linear')
 
 X_train = pd.merge(X_train, weather_data, how='left', on='date')
-X_test = pd.merge(X_train, weather_data, how='left', on='date')
+X_test = pd.merge(X_test, weather_data, how='left', on='date')
 
 # Create a column for holidays 
 
