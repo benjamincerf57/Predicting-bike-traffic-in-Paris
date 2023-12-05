@@ -28,7 +28,7 @@ def _encode_dates(X):
     X.loc[:, "year"] = X["date"].dt.year
     X.loc[:, "month"] = X["date"].dt.month
     X.loc[:, "day"] = X["date"].dt.day
-    X.loc[:, "weekday"] = X["date"].dt.weekday
+    X.loc[:, "weekday"] = (X["date"].dt.weekday < 5).astype(int)  
     X.loc[:, "hour"] = X["date"].dt.hour
 
     # Finally we can drop the original columns from the dataframe
@@ -55,7 +55,7 @@ columns_to_interpolate = ['t']
 weather_data[columns_to_interpolate] = weather_data[columns_to_interpolate].interpolate(method='linear')
 
 X_train = pd.merge(X_train, weather_data, how='left', on='date')
-X_test = pd.merge(X_test, weather_data, how='left', on='date')
+X_test = pd.merge(X_train, weather_data, how='left', on='date')
 
 # Create a column for holidays 
 
@@ -66,8 +66,7 @@ vacances_scolaires = [
     ('2021-04-10', '2021-04-26'), 
     ('2021-07-10', '2021-09-01'),  
     ('2021-10-23', '2021-11-08'),  
-    ('2021-12-18', '2022-01-03'),  
-]
+    ('2021-12-18', '2022-01-03')]
 
 for i, (debut, fin) in enumerate(vacances_scolaires):
     vacances_scolaires[i] = (pd.to_datetime(debut), pd.to_datetime(fin))
@@ -157,4 +156,3 @@ results = pd.DataFrame(
     )
 )
 results.to_csv("submission.csv", index=False)
-
