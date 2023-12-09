@@ -1,3 +1,4 @@
+# %% [code]
 """
 Submission Script.
 
@@ -29,6 +30,7 @@ counters_of_interest = [
     "20 Avenue de Clichy NO-SE", "20 Avenue de Clichy SE-NO"
     ]
 
+# Start of weeks that need to be changed in Clichy NO-SE
 weeks_tbchanged_startv1 = [
     "2021-04-08 00:00:00",
     "2021-04-15 00:00:00",
@@ -47,6 +49,7 @@ weeks_tbchanged_startv1 = [
     "2021-07-15 00:00:00"
     ]
 
+# End of weeks that need to be changed in Clichy NO-SE
 weeks_tbchanged_endv1 = [
     "2021-04-14 23:00:00",
     "2021-04-21 23:00:00",
@@ -65,6 +68,8 @@ weeks_tbchanged_endv1 = [
     "2021-07-21 23:00:00"
 ]
 
+# Values of the last "normal" week, that will be copied on detected
+# abnormal weeks
 mask_values_copiedv1 = (
     df_train["date"] >= "2021-04-01 00:00:00") & (
         df_train["date"] <= "2021-04-07 23:00:00") & (
@@ -72,6 +77,7 @@ mask_values_copiedv1 = (
 
 copied_valuesv1 = df_train.loc[mask_values_copiedv1, "log_bike_count"].tolist()
 
+# Replace abnormal values
 for start, end in zip(weeks_tbchanged_startv1, weeks_tbchanged_endv1):
     # Convert to tz-naive datetime
     start = pd.to_datetime(start).tz_localize(None)
@@ -83,6 +89,7 @@ for start, end in zip(weeks_tbchanged_startv1, weeks_tbchanged_endv1):
 
     df_train.loc[mask_values_tbchanged, "log_bike_count"] = copied_valuesv1
 
+# Start of weeks that need to be changed in Clichy SE-NO
 weeks_tbchanged_startv2 = [
     "2021-03-18 00:00:00",
     "2021-03-25 00:00:00",
@@ -104,6 +111,7 @@ weeks_tbchanged_startv2 = [
     "2021-07-15 00:00:00"
     ]
 
+# End of weeks that need to be changed in Clichy SE-NO
 weeks_tbchanged_endv2 = [
     "2021-03-24 23:00:00",
     "2021-03-31 23:00:00",
@@ -125,6 +133,8 @@ weeks_tbchanged_endv2 = [
     "2021-07-21 23:00:00"
 ]
 
+# Values of the last "normal" week, that will be copied on detected
+# abnormal weeks
 mask_values_copiedv2 = (
     df_train["date"] >= "2021-03-11 00:00:00") & (
         df_train["date"] <= "2021-03-17 23:00:00") & (
@@ -132,6 +142,7 @@ mask_values_copiedv2 = (
 
 copied_valuesv2 = df_train.loc[mask_values_copiedv2, "log_bike_count"].tolist()
 
+# Replace abnormal values
 for start, end in zip(weeks_tbchanged_startv2, weeks_tbchanged_endv2):
     # Convert to tz-naive datetime
     start = pd.to_datetime(start).tz_localize(None)
