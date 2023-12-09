@@ -1,9 +1,20 @@
-# %% [code]
+"""
+Submission Script.
+
+This script preprocesses data and trains an XGBoost regressor for predicting
+bike counts in Paris.
+
+It includes functions to encode weather-related features, handle holidays, add
+COVID-related features, and create a date encoder for date-related information.
+
+The final XGBoost model is trained and predictions are saved to a CSV file.
+
+Author: Charles De Cian, Benjamin Cerf
+"""
+
 import numpy as np
 import pandas as pd
-from sklearn.compose import ColumnTransformer
 from sklearn.preprocessing import FunctionTransformer
-import xgboost as xgb
 from xgboost import XGBRegressor
 
 # Import the train and test sets
@@ -24,48 +35,77 @@ weather_cols = ['date', 'rr3', 't']
 weather_data = weather_data[weather_cols]
 
 # Reshape the data index dealing with the dates
-weather_data['date'] = pd.to_datetime(weather_data['date'], format='%Y-%m-%d %H:%M:%S')
+weather_data['date'] = pd.to_datetime(
+    weather_data['date'], format='%Y-%m-%d %H:%M:%S'
+    )
 weather_data = weather_data.drop_duplicates(subset='date')
-new_index = pd.date_range(start=weather_data['date'].min(), end=weather_data['date'].max(), freq='H')
+new_index = pd.date_range(
+    start=weather_data['date'].min(), end=weather_data['date'].max(), freq='H'
+    )
 weather_data = weather_data.set_index('date').reindex(new_index).reset_index()
 
 # Interpolate the rr3 and t columns
 columns_to_interpolate = ['rr3', 't']
-weather_data[columns_to_interpolate]= weather_data[columns_to_interpolate].interpolate(method='linear')
+weather_data[columns_to_interpolate] = weather_data[
+    columns_to_interpolate].interpolate(method='linear')
 weather_data = weather_data.rename(columns={'index': 'date'})
 
 # Merge the external data on the train and test sets
 X_train = pd.merge(X_train, weather_data, how='left', on='date')
 X_test = pd.merge(X_test, weather_data, how='left', on='date')
 
+
 # Deal with the rain by encoding it
 def encode_precipitation(value):
+    """
+    Encode precipitation values.
+
+    Parameters:
+    - value (float): The precipitation value.
+
+    Returns:
+    - int: 0 if value < 2.5, 1 if value >= 2.5.
+    """
     if value < 2.5:
         return 0
     elif value >= 2.5:
         return 1
+
+
 X_train['precipitations'] = X_train['rr3'].apply(encode_precipitation)
 X_test['precipitations'] = X_test['rr3'].apply(encode_precipitation)
 
+
 # Deal with temperatures by encoding them
 def encode_temperature(value):
+    """
+    Encode temperature values.
+
+    Parameters:
+    - value (float): The temperature value.
+
+    Returns:
+    - int: 0 if value < 5, 1 if value >= 5.
+    """
     if value < 5:
         return 0
-    elif value >=5:
+    elif value >= 5:
         return 1
+
+
 X_train['temp'] = X_train['t'].apply(encode_temperature)
 X_test['temp'] = X_test['t'].apply(encode_temperature)
 
 
-# Create a column for holidays 
+# Create a column for holidays
 school_holidays = [
-    ('2020-10-17', '2020-11-02'),  
-    ('2020-12-19', '2021-01-04'),  
-    ('2021-02-20', '2021-03-08'),  
-    ('2021-04-10', '2021-04-26'), 
-    ('2021-07-10', '2021-09-01'),  
-    ('2021-10-23', '2021-11-08'),  
-    ('2021-12-18', '2022-01-03'),  
+    ('2020-10-17', '2020-11-02'),
+    ('2020-12-19', '2021-01-04'),
+    ('2021-02-20', '2021-03-08'),
+    ('2021-04-10', '2021-04-26'),
+    ('2021-07-10', '2021-09-01'),
+    ('2021-10-23', '2021-11-08'),
+    ('2021-12-18', '2022-01-03'),
 ]
 
 for i, (start, end) in enumerate(school_holidays):
@@ -75,8 +115,10 @@ X_train['holidays'] = 0
 X_test['holidays'] = 0
 
 for start, end in school_holidays:
-    X_train.loc[(X_train['date'] >= start) & (X_train['date'] <= end), 'holidays'] = 1
-    X_test.loc[(X_test['date'] >= start) & (X_test['date'] <= end), 'holidays'] = 1
+    X_train.loc[
+        (X_train['date'] >= start) & (X_train['date'] <= end), 'holidays'] = 1
+    X_test.loc[
+        (X_test['date'] >= start) & (X_test['date'] <= end), 'holidays'] = 1
 
 # Add a parameter based on COVID measures that were taken on that period
 confinement_dates = pd.DataFrame({
@@ -95,7 +137,21 @@ confinement_dates['end'] = pd.to_datetime(confinement_dates['end'])
 curfew_dates['start2'] = pd.to_datetime(curfew_dates['start2'])
 curfew_dates['end2'] = pd.to_datetime(curfew_dates['end2'])
 
+
 def add_covid_features(data, confinement_dates, curfew_dates):
+    """
+    Add COVID-related features to the dataset.
+
+    Parameters:
+    - data (DataFrame): The input dataset.
+    - confinement_dates (DataFrame): DataFrame containing confinement
+    period information.
+    - curfew_dates (DataFrame): DataFrame containing curfew period
+    information.
+
+    Returns:
+    - None: The function modifies the input dataset in place.
+    """
     # Create a new column 'periode' initially set to 0
     data['periode'] = 0
 
@@ -110,22 +166,25 @@ def add_covid_features(data, confinement_dates, curfew_dates):
     for _, row in curfew_dates.iterrows():
         if row['end2'] is not None:
             data.loc[
-                (data['date'] >= row['start2']) & (data['date'] <= row['end2']) &
-                (data['periode'] != 2), 
+                (data['date'] >= row['start2']) &
+                (data['date'] <= row['end2']) &
+                (data['periode'] != 2),
                 'periode'
             ] = 1
         else:
             data.loc[
                 (data['date'] >= row['start2']) &
-                (data['periode'] != 2),  
+                (data['periode'] != 2),
                 'periode'
             ] = 1
 
     # Check if a date is both in confinement and curfew and assign 2
     data['periode'] = data.groupby('date')['periode'].transform('max')
 
+
 add_covid_features(X_train, confinement_dates, curfew_dates)
 add_covid_features(X_test, confinement_dates, curfew_dates)
+
 
 # Define the date encoder we want to use
 def _encode_dates(X):
@@ -139,6 +198,8 @@ def _encode_dates(X):
 
     # Finally we can drop the original columns from the dataframe
     return X.drop(columns=["date"])
+
+
 date_encoder = FunctionTransformer(_encode_dates)
 
 # Converte site_id to categoridal
@@ -150,18 +211,26 @@ X_train = date_encoder.fit_transform(X_train)
 X_test = date_encoder.fit_transform(X_test)
 
 # Columns to be used in the model
-selected_columns = ['counter_id', 'site_id', 'year', 'month', 'day', 'weekday', 'hour', 'holidays', 'periode', 'precipitations', 'temp']
+selected_columns = [
+    'counter_id', 'site_id', 'year', 'month', 'day', 'weekday',
+    'hour', 'holidays', 'periode', 'precipitations', 'temp'
+    ]
 
 X_train_selected = X_train[selected_columns]
 X_test_selected = X_test[selected_columns]
 
 # Set the categorical columns as type category
-categorical_cols = ['site_id', 'holidays', 'periode', 'precipitations', 'temp']
-X_train_selected.loc[:, categorical_cols] = X_train_selected[categorical_cols].astype('category')
-X_test_selected.loc[:, categorical_cols] = X_test_selected[categorical_cols].astype('category')
+categorical_cols = [
+    'site_id', 'holidays', 'periode', 'precipitations', 'temp'
+    ]
+X_train_selected.loc[:, categorical_cols] = X_train_selected[
+    categorical_cols].astype('category')
+X_test_selected.loc[:, categorical_cols] = X_test_selected[
+    categorical_cols].astype('category')
 
 # Create our regressor
-regressor = XGBRegressor(learning_rate=0.2, n_estimators=900, enable_categorical=True)
+regressor = XGBRegressor(
+    learning_rate=0.2, n_estimators=900, enable_categorical=True)
 
 regressor.fit(X_train_selected, y_train)
 
