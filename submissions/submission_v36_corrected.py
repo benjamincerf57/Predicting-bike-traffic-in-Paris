@@ -147,12 +147,16 @@ def _encode_dates(X):
     return X.drop(columns=["date"])
 date_encoder = FunctionTransformer(_encode_dates)
 
+# Converte site_id to categoridal
+X_train['site_id'] = X_train['site_id'].astype('category')
+X_test['site_id'] = X_test['site_id'].astype('category')
+
 # Encode the dates
 X_train = date_encoder.fit_transform(X_train)
 X_test = date_encoder.fit_transform(X_test)
 
 # Columns to be used in the model
-selected_columns = ['counter_id', 'site_id', 'year', 'month', 'day', 'weekday', 'hour', 'vacances', 'periode', 'precipitations', 'temp']
+selected_columns = ['counter_id', 'site_id', 'year', 'month', 'day', 'weekday', 'hour', 'holidays', 'periode', 'precipitations', 'temp']
 
 X_train_selected = X_train[selected_columns]
 X_test_selected = X_test[selected_columns]
