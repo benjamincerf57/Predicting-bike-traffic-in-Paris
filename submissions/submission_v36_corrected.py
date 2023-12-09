@@ -1,3 +1,4 @@
+# %% [code]
 import numpy as np
 import pandas as pd
 from sklearn.compose import ColumnTransformer
@@ -17,13 +18,6 @@ _target_column_name = "log_bike_count"
 y_train = df_train[_target_column_name]
 X_train = df_train.drop(columns=[_target_column_name])
 X_test = df_test
-
-## A voir si au lieu de drop on peut pas juste laisser le select plus tard
-X_train = X_train.drop(columns=[
-    "counter_name", "site_name", "counter_technical_id", "coordinates", "counter_installation_date"
-    , "bike_count"])
-X_test = X_test.drop(columns=[
-    "counter_name", "site_name", "counter_technical_id", "coordinates", "counter_installation_date"])
 
 # Deal with the external weather data
 weather_cols = ['date', 'rr3', 't']
@@ -161,10 +155,10 @@ selected_columns = ['counter_id', 'site_id', 'year', 'month', 'day', 'weekday', 
 X_train_selected = X_train[selected_columns]
 X_test_selected = X_test[selected_columns]
 
-X_train_selected['site_id'] = X_train_selected['site_id'].astype('category')
-X_test_selected['site_id'] = X_test_selected['site_id'].astype('category')
-
-X_train_selected.head()
+# Set the categorical columns as type category
+categorical_cols = ['site_id', 'holidays', 'periode', 'precipitations', 'temp']
+X_train_selected.loc[:, categorical_cols] = X_train_selected[categorical_cols].astype('category')
+X_test_selected.loc[:, categorical_cols] = X_test_selected[categorical_cols].astype('category')
 
 # Create our regressor
 regressor = XGBRegressor(learning_rate=0.2, n_estimators=900, enable_categorical=True)
@@ -179,4 +173,4 @@ results = pd.DataFrame(
         log_bike_count=y_pred,
     )
 )
-results.to_csv("submission.csv", index=False)
+results.to_csv("submission.csv", index=False)
