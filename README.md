@@ -1,3 +1,7 @@
+### Challenge description
+
+This challenge focuses on predicting bicycle traffic volumes using data from automated bike counters installed throughout Paris. The goal is to develop a machine learning model that can accurately forecast the number of cyclists passing through different counting stations. This project is a part of the X-HEC Data Science master's program (first year). The contributors are CERF Benjamin and DE CIAN Charles. You can find enclosed various folders containing the code, the data and our final report.
+
 # Starting kit on the bike counters dataset
 
 ![GH Actions](https://github.com/ramp-kits/bike_counters/actions/workflows/main.yml/badge.svg)
@@ -30,21 +34,3 @@ You can install the dependencies with the following command-line:
 ```bash
 pip install -U -r requirements.txt
 ```
-
-
-### Challenge description
-
-Get started on this challenge with the
-[dedicated notebook](bike_counters_starting_kit.ipynb).
-
-Launch the notebook using:
-
-```bash
-jupyter lab ./bike_counters_starting_kit.ipynb
-```
-
-### Submissions
-
-Upload your script file `.py` to Kaggle using the Kaggle interface directly.
-The platform will then execute your code to generate your submission csv file, and compute your score.
-Note that your submission .csv file must have the columns "Id" and "bike_log_count", and be of the same length as `final_test.parquet`.
